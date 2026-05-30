@@ -1,0 +1,57 @@
+from statsmodels.stats.diagnostic import het_arch, acorr_ljungbox
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+from scipy.stats import probplot
+import matplotlib.pyplot as plt
+from data_loader import get_close
+from returns import compute_returns
+
+def arch_lm_test(returns, label=""):
+    test_stat, p_value, f_stat, f_pvalue = het_arch(returns)
+    print(f"ARCH-LM Test ({label})")
+    print(f"ARCH-LM Test Statistic: {test_stat:.4f}")
+    print(f"ARCH-LM Test p-value: {p_value:.4f}")
+    if p_value < 0.05:
+        print("Conclusion: ARCH effects present - GARCH modeling is justified.")
+    else:
+        print("Conclusion: no ARCH effects present - GARCH modeling is not justified.")
+
+
+def plot_acf_pacf(returns):
+    fig, axes = plt.subplots(2, 2, figsize=(12, 8))
+    fig.suptitle("ACF and PACF of Returns and Squared Returns")
+
+    plot_acf(returns, ax=axes[0, 0], title="ACF of Returns")
+    plot_pacf(returns, ax=axes[0, 1], title="PACF of Returns")
+    plot_acf(returns**2, ax=axes[1, 0], title="ACF of Squared Returns")
+    plot_pacf(returns**2, ax=axes[1, 1], title="PACF of Squared Returns")
+
+    plt.tight_layout()
+    plt.show()
+
+
+
+# Post-fit functions
+
+def ljung_box_test(residuals, label=""):
+    ljung_box_test_result = acorr_ljungbox(residuals, lags=10, return_df=True)
+    print(f"Ljung-Box Test ({label})")
+    if (ljung_box_test_result["lb_pvalue"] < 0.05).any():
+        print("Conclusion: autocorrelation remains in residuals - model may be misspecified.")
+    else:
+        print("Conclusion: no autocorrelation in residuals - GARCH captured the dynamics.")
+
+
+def plot_qq(residuals, label=""):
+    plt.figure(figsize=(8, 6))
+    probplot(residuals, dist="norm", plot=plt)
+    plt.title(f"QQ Plot of Standardized Residuals ({label})")
+    plt.grid(True)
+    plt.show()
+
+
+# Quick check
+if __name__ == "__main__":
+    close = get_close()
+    returns = compute_returns(close)
+    arch_lm_test(returns, label="raw returns")
+    plot_acf_pacf(returns)
