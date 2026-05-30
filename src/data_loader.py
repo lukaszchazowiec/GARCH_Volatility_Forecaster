@@ -26,6 +26,7 @@ def fetch_prices(force_download=False):
 
     return prices
 
+
 def get_close(force_download=False):
     prices = fetch_prices(force_download)
     return prices["Close"]
