@@ -4,6 +4,7 @@ from scipy.stats import probplot
 import matplotlib.pyplot as plt
 from data_loader import get_close
 from returns import compute_returns
+from models import fit_garch, fit_egarch, fit_gjr, compare_models
 
 def arch_lm_test(returns, label=""):
     test_stat, p_value, f_stat, f_pvalue = het_arch(returns)
@@ -53,5 +54,31 @@ def plot_qq(residuals, label=""):
 if __name__ == "__main__":
     close = get_close()
     returns = compute_returns(close)
+
+    print("Initial Diagnostics:")
     arch_lm_test(returns, label="raw returns")
     plot_acf_pacf(returns)
+
+    print("\nFitting Models:")
+    garch_res = fit_garch(returns, label="S&P 500")
+    egarch_res = fit_egarch(returns, label="S&P 500")
+    gjr_res = fit_gjr(returns, label="S&P 500")
+
+    print("\nComparison of Models:")
+    model_results_list = [garch_res, egarch_res, gjr_res]
+    compare_models(model_results_list)
+
+    print("\nPost-Fit Diagnostics:")
+    for res in model_results_list:
+        model_name = res['model']
+        results_obj = res['results_obj']
+
+        std_residuals = results_obj.resid / results_obj.conditional_volatility
+
+        print("\n" + "=" * 40)
+        print(f"Diagnostics for {model_name} model:")
+        print("=" * 40)
+
+        ljung_box_test(std_residuals, label=model_name)
+
+        plot_qq(std_residuals, label=model_name)
