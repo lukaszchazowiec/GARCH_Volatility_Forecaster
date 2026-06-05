@@ -33,7 +33,7 @@ def get_close(force_download=False):
 
 
 if __name__ == "__main__":
-    close = get_close()
+    close = get_close(force_download=True)
 
     print(f"\nTicker       : {TICKER}")
     print(f"Start        : {close.index[0].date()}")
