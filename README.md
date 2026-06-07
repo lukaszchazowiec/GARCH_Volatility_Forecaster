@@ -1,6 +1,7 @@
 # Volatility Forecasting with GARCH: S&P 500
 
-A rigorous empirical study of volatility dynamics in the U.S. equity market, using the S&P 500 index (^GSPC) as the primary data series. The project fits and compares three GARCH-family models — GARCH(1,1), EGARCH, and GJR-GARCH — validates them through residual diagnostics, and evaluates their practical usefulness via rolling Value-at-Risk backtests with formal statistical tests.
+
+A rigorous empirical study of volatility dynamics in the U.S. equity market, using the S&P 500 index (^GSPC) as the primary data series. The project fits and compares three GARCH-family models — GARCH(1,1), EGARCH(1,1), and GJR-GARCH(1,1) — validates them through residual diagnostics, and evaluates their practical usefulness via rolling Value-at-Risk backtests with formal statistical tests.
 
 This project was motivated by work in a student investment fund risk department, where GARCH-based volatility forecasting underpins VaR estimation for portfolio risk monitoring. The S&P 500 was selected as a liquid, well-documented benchmark with reliable data availability.
 
@@ -19,18 +20,18 @@ The central research question is: **do GARCH-family models produce statistically
 ## Project Structure
 
 ```
-garch-volatility-sp500/
+GARCH_Volatility_Forecaster/
 │
 ├── README.md
 ├── requirements.txt
 ├── data/                       # raw price data (gitignored, fetched via yfinance)
 ├── src/
-│   ├── __init__.py
 │   ├── data_loader.py          # price fetching and caching
 │   ├── returns.py              # log return computation and descriptive statistics
 │   ├── diagnostics.py          # pre- and post-fit statistical tests
 │   ├── models.py               # GARCH, EGARCH, GJR-GARCH fitting and selection
-│   └── backtest.py             # rolling VaR backtest and Kupiec/Christoffersen tests
+│   ├── backtest.py             # rolling VaR backtest and Kupiec/Christoffersen tests
+│   └── plots.py                # all visualisations: conditional vol, VaR backtest, distributions
 └── notebooks/
     └── analysis.ipynb          # full narrative analysis with plots and results tables
 ```
@@ -41,7 +42,7 @@ garch-volatility-sp500/
 
 ### 1. Data
 
-Daily closing prices for the S&P 500 (`^GSPC`) are sourced via `yfinance` from 2009-01-01 to present, yielding approximately 4,300 observations. Starting from 2009 captures the tail end of the 2008 financial crisis, ensuring the model is trained on a period that includes a major volatility regime. Log returns are computed as $r_t = \ln(P_t / P_{t-1})$.
+Daily closing prices for the S&P 500 (`^GSPC`) are sourced via `yfinance` from 2005-01-01 to present, yielding approximately 5,100 observations. Starting from 2005 captures the full 2008 financial crisis and multiple volatility regimes including the European debt crisis (2011), COVID-19 crash (2020), and the 2022 rate hike cycle. Log returns are computed as $r_t = \ln(P_t / P_{t-1})$.
 
 ### 2. Pre-fit Diagnostics — Motivating GARCH
 
@@ -55,7 +56,7 @@ This step is not a formality. If ARCH effects were absent, GARCH would be an unn
 
 ### 3. Model Specifications
 
-Three GARCH-family models are estimated via Maximum Likelihood:
+Three GARCH-family models are estimated via Maximum Likelihood with Student-t distributed errors, chosen over Gaussian based on the excess kurtosis (11.70) observed in the return series and consistent with Hall & Yao (2003):
 
 **GARCH(1,1)** — Bollerslev (1986)
 
@@ -63,13 +64,13 @@ $$\sigma^2_t = \omega + \alpha \varepsilon^2_{t-1} + \beta \sigma^2_{t-1}$$
 
 The persistence parameter $\alpha + \beta$ measures how long volatility shocks decay. Values close to 1 indicate long memory in volatility, commonly observed in equity markets.
 
-**EGARCH** — Nelson (1991)
+**EGARCH(1,1)** — Nelson (1991)
 
 $$\ln(\sigma^2_t) = \omega + \alpha \left( |z_{t-1}| - \mathbb{E}|z_{t-1}| \right) + \gamma z_{t-1} + \beta \ln(\sigma^2_{t-1})$$
 
 The log-variance formulation guarantees positive variance without parameter restrictions. The $\gamma$ coefficient captures the **leverage effect**: negative shocks ($z_{t-1} < 0$) increase volatility by more than positive shocks of equal magnitude.
 
-**GJR-GARCH** — Glosten, Jagannathan & Runkle (1993)
+**GJR-GARCH(1,1)** — Glosten, Jagannathan & Runkle (1993)
 
 $$\sigma^2_t = \omega + (\alpha + \gamma \mathbf{1}_{[\varepsilon_{t-1}<0]}) \varepsilon^2_{t-1} + \beta \sigma^2_{t-1}$$
 
@@ -81,39 +82,39 @@ Models are compared using AIC, BIC, and log-likelihood. Both information criteri
 
 A well-specified GARCH model should produce standardised residuals $\hat{z}_t = \varepsilon_t / \hat{\sigma}_t$ that behave as white noise. This is verified via:
 
-- **Ljung-Box test** on $\hat{z}_t$ and $\hat{z}^2_t$ — tests for remaining serial autocorrelation
+- **Ljung-Box test** on $\hat{z}_t$ — tests for remaining serial autocorrelation
 - **ARCH-LM test** on residuals — confirms that ARCH effects have been absorbed by the model
-- **QQ plot** of standardised residuals against Normal and Student-t distributions — assesses whether the assumed error distribution is appropriate
+- **QQ plot** of standardised residuals against the fitted Student-t distribution — assesses whether the distributional assumption is appropriate
 
-The before/after ARCH-LM comparison is the key diagnostic narrative: significant pre-fit, insignificant post-fit confirms the model is doing its job.
+The before/after ARCH-LM comparison is the key diagnostic narrative: significant pre-fit, insignificant post-fit confirms the model captured volatility dynamics.
 
 ### 5. VaR Backtesting
 
 A rolling window backtest evaluates the practical validity of each model's VaR forecasts:
 
-- **Window**: 500-day training window, rolled forward daily across a 500-day test period
+- **Window**: 252-day training window, rolled forward daily
 - **VaR levels**: 95% and 99% confidence
-- **Procedure**: Refit the model on each window, forecast next-day conditional variance, compute VaR as $\text{VaR}_\alpha = \hat{\sigma}_{t+1} \cdot z_\alpha$ where $z_\alpha$ is the appropriate quantile
+- **Procedure**: Refit the model on each window, forecast next-day conditional variance, compute VaR as $\text{VaR}_\alpha = \hat{\sigma}_{t+1} \cdot z_\alpha$ where $z_\alpha$ is the Student-t quantile at the estimated degrees of freedom
 
 Exceedance sequences are evaluated using two formal tests:
 
 **Kupiec POF test** — Kupiec (1995): likelihood-ratio test of whether the observed violation rate matches the nominal confidence level. Tests coverage accuracy.
 
-**Christoffersen independence test** — Christoffersen (1998): likelihood-ratio test of whether violations are independently distributed over time. Clustered violations — a VaR model that fails on consecutive days — indicate the model is not capturing volatility dynamics adequately.
+**Christoffersen independence test** — Christoffersen (1998): likelihood-ratio test of whether violations are independently distributed over time. Clustered violations indicate the model is not capturing volatility regime changes adequately.
 
 Together these tests correspond to Basel III's requirements for internal VaR model validation.
 
 ---
 
-## Results
+## Key Results
 
-*To be completed as the project progresses.*
+| Model | AIC | BIC | Persistence | Kupiec 99% | Christoffersen 99% | Basel III |
+|-------|-----|-----|-------------|------------|-------------------|-----------|
+| GARCH(1,1) | 11299.83 | 11331.74 | 0.9926 | PASSED | PASSED | GREEN |
+| EGARCH(1,1) | 11315.64 | 11347.56 | 0.9742 | REJECT | CLUSTERING | YELLOW |
+| GJR-GARCH(1,1) | 11148.03 | 11186.33 | 0.9793 | PASSED | PASSED | GREEN |
 
-| Model | AIC | BIC | Log-Lik | Persistence (α+β) | Kupiec (95%) | Christoffersen (95%) |
-|-------|-----|-----|---------|-------------------|--------------|----------------------|
-| GARCH(1,1) | — | — | — | — | — | — |
-| EGARCH | — | — | — | — | — | — |
-| GJR-GARCH | — | — | — | — | — | — |
+**GJR-GARCH(1,1) is the best performing model** across both model selection criteria and backtesting. Its superior fit is attributed to the leverage effect parameter (γ = 0.2585), which captures the asymmetric response of volatility to negative shocks — a dynamic ignored by GARCH(1,1) and imprecisely captured by EGARCH.
 
 ---
 
@@ -132,14 +133,19 @@ Forecast accuracy across GARCH variants and HAR-RV will be compared using the **
 ## Installation
 
 ```bash
-git clone https://github.com/yourusername/garch-volatility-sp500.git
-cd garch-volatility-sp500
+git clone https://github.com/lukaszchazowiec/GARCH_Volatility_Forecaster.git
+cd GARCH_Volatility_Forecaster
 pip install -r requirements.txt
 ```
 
-Then open `notebooks/analysis.ipynb` to run the full pipeline.
+Then open `notebooks/analysis.ipynb` to run the full narrative analysis.
 
-**Requirements**: Python 3.10+, `arch`, `pandas`, `numpy`, `statsmodels`, `matplotlib`, `scipy`, `yfinance`
+To rerun the rolling backtest (takes ~8 minutes):
+```bash
+python src/backtest.py
+```
+
+**Requirements**: Python 3.10+, `arch`, `pandas`, `numpy`, `statsmodels`, `matplotlib`, `scipy`, `yfinance`, `tqdm`
 
 ---
 
@@ -171,7 +177,7 @@ Original source papers for each model and test implemented in this project. To b
 **Glosten, L.R., Jagannathan, R. & Runkle, D.E. (1993).** On the Relation Between the Expected Value and the Volatility of the Nominal Excess Return on Stocks. *Journal of Finance*, 48(5), 1779–1801.
 — Introduces GJR-GARCH as an alternative leverage-effect specification.
 
-**Kupiec, P.H. (1995).** Techniques for Verifying the Accuracy of Risk Measurement Models. *Journal of Derivatives*, 3(2), 73–84.
+**Kupiec, P.H. (1995).** Techniques for Verifying the Accuracy of Risk Measurement Models. *Journal of Derivatives*, (2), 73–84.
 — Provides the POF likelihood-ratio test for VaR coverage accuracy used in the backtesting module.
 
 **Christoffersen, P.F. (1998).** Evaluating Interval Forecasts. *International Economic Review*, 39(4), 841–862.
@@ -191,6 +197,3 @@ Original source papers for each model and test implemented in this project. To b
 
 This project is part of an ongoing effort to build a quantitative finance portfolio targeting risk analyst and junior quant roles.
 
----
-
-*Feedback and methodological criticism welcome via GitHub Issues.*
