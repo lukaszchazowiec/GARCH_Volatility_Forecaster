@@ -111,7 +111,7 @@ Together these tests correspond to Basel III's requirements for internal VaR mod
 | Model | AIC | BIC | Persistence | Kupiec 99% | Christoffersen 99% | Basel III |
 |-------|-----|-----|-------------|------------|-------------------|-----------|
 | GARCH(1,1) | 11299.83 | 11331.74 | 0.9926 | PASSED | PASSED | GREEN |
-| EGARCH(1,1) | 11315.64 | 11347.56 | 0.9742 | REJECT | CLUSTERING | YELLOW |
+| EGARCH | 11315.64 | 11347.56 | 0.9742 | REJECT | CLUSTERING | YELLOW |
 | GJR-GARCH(1,1) | 11148.03 | 11186.33 | 0.9793 | PASSED | PASSED | GREEN |
 
 **GJR-GARCH(1,1) is the best performing model** across both model selection criteria and backtesting. Its superior fit is attributed to the leverage effect parameter (γ = 0.2585), which captures the asymmetric response of volatility to negative shocks — a dynamic ignored by GARCH(1,1) and imprecisely captured by EGARCH.
