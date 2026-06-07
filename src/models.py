@@ -49,7 +49,7 @@ def fit_egarch(returns, label=""):
     alpha = results.params['alpha[1]']
     beta = results.params['beta[1]']
 
-    print(f"EGARCH(1,1) Results ({label})")
+    print(f"EGARCH Results ({label})")
     print(f"omega              : {results.params['omega']:.6f}")
     print(f"alpha[1]           : {alpha:.4f}")
     print(f"beta[1]            : {beta:.4f}")
@@ -62,7 +62,7 @@ def fit_egarch(returns, label=""):
 
     return {
         'label': label,
-        'model': 'EGARCH(1,1)',
+        'model': 'EGARCH',
         'omega': results.params['omega'],
         'alpha': alpha,
         'beta': beta,

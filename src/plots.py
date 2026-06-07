@@ -8,12 +8,7 @@ from scipy.stats import norm
 from data_loader import get_close
 from returns import compute_returns
 from models import fit_garch, fit_egarch, fit_gjr
-from backtest import rolling_var_backtest
 
-# plot_conditional_volatility(all_results, returns)
-# plot_var_backtest(actual, var_95, var_99, model_name)
-# plot_return_distribution(returns)
-# plot_qq(residuals, label="")  ← already written in diagnostics.py
 
 def plot_returns(returns):
 
@@ -55,14 +50,14 @@ def plot_conditional_volatility(garch_results, egarch_results, gjr_garch_results
 
 def plot_var_backtest(actual_returns, var_95, var_99, model_name):
 
-    exceedances = actual_returns[actual_returns < -var_99]
+    exceedances_99 = actual_returns[actual_returns < -var_99]
 
     plt.figure(figsize=(14, 6))
 
     plt.plot(actual_returns, color='grey', linewidth=0.7, alpha=0.7, label='Actual Returns')
     plt.plot(-var_95, color='blue', linewidth=1, label='VaR 95%')
     plt.plot(-var_99, color='red', linewidth=1, label='VaR 99%')
-    plt.scatter(exceedances.index, exceedances.values, color='orange', s=10, zorder=5, label='Exceedances')
+    plt.scatter(exceedances_99.index, exceedances_99.values, color='orange', s=10, zorder=5, label='Exceedances_99%')
 
     plt.axhline(0, color='black', linewidth=0.5)
     plt.gca().yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x * 100:.1f}%'))
