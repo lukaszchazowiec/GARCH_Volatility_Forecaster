@@ -3,7 +3,7 @@ import yfinance as yf
 import os
 
 TICKER = "^GSPC"
-START_DATE = "2009-01-01"
+START_DATE = "2005-01-01"
 CACHE_PATH = "../data/sp500_prices.csv"
 
 def fetch_prices(force_download=False):
@@ -33,7 +33,7 @@ def get_close(force_download=False):
 
 
 if __name__ == "__main__":
-    close = get_close(force_download=True)
+    close = get_close(force_download=False)
 
     print(f"\nTicker       : {TICKER}")
     print(f"Start        : {close.index[0].date()}")

@@ -42,6 +42,7 @@ def rolling_var_backtest(returns, model_type, window=252):
 
     index = returns.index[window:]
 
+
     return (
         pd.Series(actual_returns, index=index),
         pd.Series(var_95, index=index),
@@ -94,9 +95,9 @@ def statistical_tests(actual_returns, var_forecasts, alpha):
     p_total = (n01 + n11) / (n00 + n01 + n10 + n11) if (n00 + n01 + n10 + n11) > 0 else 0.0
 
     L_ind_null = (n00+n10) * safe_log(1-p_total) + (n01+n11) * safe_log(p_total)
-    L_inx_alt = n00 * safe_log(1-p_01) + n01 * safe_log(p_01) + n10 * safe_log(1-p_11) + n11 * safe_log(p_11)
+    L_ind_alt = n00 * safe_log(1-p_01) + n01 * safe_log(p_01) + n10 * safe_log(1-p_11) + n11 * safe_log(p_11)
 
-    LR_ind = 2 * (L_inx_alt - L_ind_null)
+    LR_ind = 2 * (L_ind_alt - L_ind_null)
     p_value_ind = chi2.sf(LR_ind, df=1)
 
 
@@ -152,6 +153,13 @@ if __name__ == "__main__":
             'var_95': v95,
             'var_99': v99
         }
+
+    for model_type in list_of_models:
+        res = all_results[model_type]
+        res['actual'].to_csv(f"../data/actual_returns.csv")
+        res['var_95'].to_csv(f"../data/var_95_{model_type}.csv")
+        res['var_99'].to_csv(f"../data/var_99_{model_type}.csv")
+
 
     # 3. Generate the final evaluation report
     print("\n\n" + "=" * 60)

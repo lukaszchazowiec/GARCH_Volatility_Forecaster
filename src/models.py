@@ -22,6 +22,7 @@ def fit_garch(returns, label=""):
     print(f"log-likelihood     : {results.loglikelihood:.4f}")
     print(f"AIC                : {results.aic:.4f}")
     print(f"BIC                : {results.bic:.4f}")
+    print()
 
     return {
         'label'      : label,
