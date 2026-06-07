@@ -32,6 +32,7 @@ def rolling_var_backtest(returns, model_type, window=252):
 
         pred_variance = results.forecast(horizon=1).variance.iloc[-1, 0]
         sigma_next = np.sqrt(pred_variance) / 100
+        sigma_next = np.clip(sigma_next, 0, 0.2)  # cap at 20% daily vol — never realistic above this
         nu = results.params['nu']
 
         v95 = -t.ppf(0.05, nu) * sigma_next

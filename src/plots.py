@@ -55,7 +55,7 @@ def plot_conditional_volatility(garch_results, egarch_results, gjr_garch_results
 
 def plot_var_backtest(actual_returns, var_95, var_99, model_name):
 
-    exceedances = actual_returns[actual_returns < -var_95]
+    exceedances = actual_returns[actual_returns < -var_99]
 
     plt.figure(figsize=(14, 6))
 
@@ -67,7 +67,7 @@ def plot_var_backtest(actual_returns, var_95, var_99, model_name):
     plt.axhline(0, color='black', linewidth=0.5)
     plt.gca().yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{x * 100:.1f}%'))
     plt.title(f"VaR Backtest — {model_name}")
-    plt.legend(["Actual Returns", "VaR 95%", "VaR 99%", "Exceedances"])
+    plt.legend(["Actual Returns", "VaR 95%", "VaR 99%", "Exceedances VaR 99%"])
     plt.show()
 
 
