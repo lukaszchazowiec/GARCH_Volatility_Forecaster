@@ -1,7 +1,7 @@
 # Volatility Forecasting with GARCH: S&P 500
 
 
-A rigorous empirical study of volatility dynamics in the U.S. equity market, using the S&P 500 index (^GSPC) as the primary data series. The project fits and compares three GARCH-family models — GARCH(1,1), EGARCH(1,1), and GJR-GARCH(1,1) — validates them through residual diagnostics, and evaluates their practical usefulness via rolling Value-at-Risk backtests with formal statistical tests.
+A rigorous empirical study of volatility dynamics in the U.S. equity market, using the S&P 500 index (^GSPC) as the primary data series. The project fits and compares three GARCH-family models — GARCH(1,1), EGARCH, and GJR-GARCH(1,1) — validates them through residual diagnostics, and evaluates their practical usefulness via rolling Value-at-Risk backtests with formal statistical tests.
 
 This project was motivated by work in a student investment fund risk department, where GARCH-based volatility forecasting underpins VaR estimation for portfolio risk monitoring. The S&P 500 was selected as a liquid, well-documented benchmark with reliable data availability.
 
