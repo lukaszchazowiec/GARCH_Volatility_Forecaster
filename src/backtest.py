@@ -61,8 +61,6 @@ def statistical_tests(actual_returns, var_forecasts, alpha):
     x = sum(hits)
     p_actual = x / N
 
-    print(f"Number of days in the test: {N}")
-    print(f"Number of var breaches: {x}")
 
     def safe_log(val):
         return np.log(val) if val > 0 else 0.0
@@ -115,8 +113,9 @@ def statistical_tests(actual_returns, var_forecasts, alpha):
         else:
             basel_3_test = "RED"
 
-
     return {
+        "N": N,
+        "x": x,
         "hits": hits,
         "p_actual": p_actual,
         "p_value": p_value,
@@ -129,26 +128,21 @@ def statistical_tests(actual_returns, var_forecasts, alpha):
 # Quick check
 
 if __name__ == "__main__":
-    # 1. Fetch and prepare market data
+
     close = get_close()
     returns = compute_returns(close)
 
-    # List of volatility models to backtest
     list_of_models = ['GARCH', 'EGARCH', 'GJR-GARCH']
 
-    # Dictionary to store full results and prevent data loss after the loop
     all_results = {}
 
-    # 2. Main computation loop (GARCH Volatility Engine)
     for model_type in list_of_models:
         print(f"\n=========================================")
         print(f" Running backtest for model: {model_type}")
         print(f"=========================================")
 
-        # Execute rolling window calculations
         actual, v95, v99 = rolling_var_backtest(returns, model_type=model_type, window=252)
 
-        # Store generated series in the dictionary
         all_results[model_type] = {
             'actual': actual,
             'var_95': v95,
@@ -162,7 +156,6 @@ if __name__ == "__main__":
         res['var_99'].to_csv(f"../data/var_99_{model_type}.csv")
 
 
-    # 3. Generate the final evaluation report
     print("\n\n" + "=" * 60)
     print("  FINAL REPORT - STATISTICAL TESTS (Christoffersen 1998)")
     print("=" * 60)
@@ -170,21 +163,18 @@ if __name__ == "__main__":
     for model_type in list_of_models:
         res = all_results[model_type]
 
-        # Run your universal testing function for both significance levels
         stats_95 = statistical_tests(res['actual'], res['var_95'], alpha=0.05)
         stats_99 = statistical_tests(res['actual'], res['var_99'], alpha=0.01)
 
         print(f"\nRESULTS FOR MODEL: {model_type}")
         print(f"  " + "-" * 40)
 
-        # VaR 95% evaluation section
         print(f"  [VaR 95%] Actual failure rate: {stats_95['p_actual'] * 100:.2f}% (Expected: 5.00%)")
         print(f"            Kupiec POF p-value: {stats_95['p_value']:.4f} " + (
             "REJECT" if stats_95['p_value'] < 0.05 else "PASSED"))
         print(f"            Christoffersen Ind p-value: {stats_95['p_value_ind']:.4f} " + (
             "CLUSTERING DETECTED" if stats_95['p_value_ind'] < 0.05 else "PASSED"))
 
-        # VaR 99% evaluation section
         print(f"  [VaR 99%] Actual failure rate: {stats_99['p_actual'] * 100:.2f}% (Expected: 1.00%)")
         print(f"            Kupiec POF p-value: {stats_99['p_value']:.4f} " + (
             "REJECT" if stats_99['p_value'] < 0.05 else "PASSED"))
